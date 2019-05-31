@@ -1,62 +1,15 @@
-# The MIT License (MIT)
-#
-# Copyright (c) 2014 Richard Moore
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-
-# This is a pure-Python implementation of the AES algorithm and AES common
-# modes of operation.
-
-# See: https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
-
-# Honestly, the best description of the modes of operations are the wonderful
-# diagrams on Wikipedia. They explain in moments what my words could never
-# achieve. Hence the inline documentation here is sparer than I'd prefer.
-# See: https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
-
-# Also useful, PyCrypto, a crypto library implemented in C with Python bindings:
-# https://www.dlitz.net/software/pycrypto/
-
-
 # Supported key sizes:
 #   128-bit
 #   192-bit
 #   256-bit
 
-
 # Supported modes of operation:
 #   ECB - Electronic Codebook
-#   CBC - Cipher-Block Chaining
-#   CFB - Cipher Feedback
-#   OFB - Output Feedback
-#   CTR - Counter
-
-
-# See the README.md for API details and general information.
-
 
 import copy
 import struct
 
-__all__ = ["AES", "AESModeOfOperationCTR", "AESModeOfOperationCBC", "AESModeOfOperationCFB",
-           "AESModeOfOperationECB", "AESModeOfOperationOFB", "AESModesOfOperation", "Counter"]
-
+__all__ = ["AES","AESModeOfOperationECB"]
 
 def _compact_word(word):
     return (word[0] << 24) | (word[1] << 16) | (word[2] << 8) | word[3]
@@ -69,7 +22,6 @@ def _bytes_to_string(binary):
 
 def _concat_list(a, b):
     return a + b
-
 
 # Python 3 compatibility
 try:
@@ -90,7 +42,6 @@ except Exception:
     # Python 3 cannot concatenate a list onto a bytes, so we bytes-ify it first
     def _concat_list(a, b):
         return a + bytes(b)
-
 
 # Based *largely* on the Rijndael implementation
 # See: http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
@@ -268,36 +219,6 @@ class AES(object):
 
         return result
 
-
-class Counter(object):
-    '''A counter object for the Counter (CTR) mode of operation.
-
-       To create a custom counter, you can usually just override the
-       increment method.'''
-
-    def __init__(self, initial_value = 1):
-
-        # Convert the value into an array of bytes long
-        self._counter = [ ((initial_value >> i) % 256) for i in xrange(128 - 8, -1, -8) ]
-
-    value = property(lambda s: s._counter)
-
-    def increment(self):
-        '''Increment the counter (overflow rolls back to 0).'''
-
-        for i in xrange(len(self._counter) - 1, -1, -1):
-            self._counter[i] += 1
-
-            if self._counter[i] < 256: break
-
-            # Carry the one
-            self._counter[i] = 0
-
-        # Overflow
-        else:
-            self._counter = [ 0 ] * len(self._counter)
-
-
 class AESBlockModeOfOperation(object):
     '''Super-class for AES modes of operation that require blocks.'''
     def __init__(self, key):
@@ -309,16 +230,12 @@ class AESBlockModeOfOperation(object):
     def encrypt(self, plaintext):
         raise Exception('not implemented')
 
-
 class AESStreamModeOfOperation(AESBlockModeOfOperation):
     '''Super-class for AES modes of operation that are stream-ciphers.'''
 
 class AESSegmentModeOfOperation(AESStreamModeOfOperation):
     '''Super-class for AES modes of operation that segment data.'''
-
     segment_bytes = 16
-
-
 
 class AESModeOfOperationECB(AESBlockModeOfOperation):
     '''AES Electronic Codebook Mode of Operation.
@@ -352,238 +269,7 @@ class AESModeOfOperationECB(AESBlockModeOfOperation):
         return _bytes_to_string(self._aes.decrypt(ciphertext))
 
 
-
-class AESModeOfOperationCBC(AESBlockModeOfOperation):
-    '''AES Cipher-Block Chaining Mode of Operation.
-
-       o The Initialization Vector (IV)
-       o Block-cipher, so data must be padded to 16 byte boundaries
-       o An incorrect initialization vector will only cause the first
-         block to be corrupt; all other blocks will be intact
-       o A corrupt bit in the cipher text will cause a block to be
-         corrupted, and the next block to be inverted, but all other
-         blocks will be intact.
-
-   Security Notes:
-       o This method (and CTR) ARE recommended.
-
-   Also see:
-       o https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher-block_chaining_.28CBC.29
-       o See NIST SP800-38A (http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf); section 6.2'''
-
-
-    name = "Cipher-Block Chaining (CBC)"
-
-    def __init__(self, key, iv = None):
-        if iv is None:
-            self._last_cipherblock = [ 0 ] * 16
-        elif len(iv) != 16:
-            raise ValueError('initialization vector must be 16 bytes')
-        else:
-            self._last_cipherblock = _string_to_bytes(iv)
-
-        AESBlockModeOfOperation.__init__(self, key)
-
-    def encrypt(self, plaintext):
-        if len(plaintext) != 16:
-            raise ValueError('plaintext block must be 16 bytes')
-
-        plaintext = _string_to_bytes(plaintext)
-        precipherblock = [ (p ^ l) for (p, l) in zip(plaintext, self._last_cipherblock) ]
-        self._last_cipherblock = self._aes.encrypt(precipherblock)
-
-        return _bytes_to_string(self._last_cipherblock)
-
-    def decrypt(self, ciphertext):
-        if len(ciphertext) != 16:
-            raise ValueError('ciphertext block must be 16 bytes')
-
-        cipherblock = _string_to_bytes(ciphertext)
-        plaintext = [ (p ^ l) for (p, l) in zip(self._aes.decrypt(cipherblock), self._last_cipherblock) ]
-        self._last_cipherblock = cipherblock
-
-        return _bytes_to_string(plaintext)
-
-
-
-class AESModeOfOperationCFB(AESSegmentModeOfOperation):
-    '''AES Cipher Feedback Mode of Operation.
-
-       o A stream-cipher, so input does not need to be padded to blocks,
-         but does need to be padded to segment_size
-
-    Also see:
-       o https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_feedback_.28CFB.29
-       o See NIST SP800-38A (http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf); section 6.3'''
-
-
-    name = "Cipher Feedback (CFB)"
-
-    def __init__(self, key, iv, segment_size = 1):
-        if segment_size == 0: segment_size = 1
-
-        if iv is None:
-            self._shift_register = [ 0 ] * 16
-        elif len(iv) != 16:
-            raise ValueError('initialization vector must be 16 bytes')
-        else:
-          self._shift_register = _string_to_bytes(iv)
-
-        self._segment_bytes = segment_size
-
-        AESBlockModeOfOperation.__init__(self, key)
-
-    segment_bytes = property(lambda s: s._segment_bytes)
-
-    def encrypt(self, plaintext):
-        if len(plaintext) % self._segment_bytes != 0:
-            raise ValueError('plaintext block must be a multiple of segment_size')
-
-        plaintext = _string_to_bytes(plaintext)
-
-        # Break block into segments
-        encrypted = [ ]
-        for i in xrange(0, len(plaintext), self._segment_bytes):
-            plaintext_segment = plaintext[i: i + self._segment_bytes]
-            xor_segment = self._aes.encrypt(self._shift_register)[:len(plaintext_segment)]
-            cipher_segment = [ (p ^ x) for (p, x) in zip(plaintext_segment, xor_segment) ]
-
-            # Shift the top bits out and the ciphertext in
-            self._shift_register = _concat_list(self._shift_register[len(cipher_segment):], cipher_segment)
-
-            encrypted.extend(cipher_segment)
-
-        return _bytes_to_string(encrypted)
-
-    def decrypt(self, ciphertext):
-        if len(ciphertext) % self._segment_bytes != 0:
-            raise ValueError('ciphertext block must be a multiple of segment_size')
-
-        ciphertext = _string_to_bytes(ciphertext)
-
-        # Break block into segments
-        decrypted = [ ]
-        for i in xrange(0, len(ciphertext), self._segment_bytes):
-            cipher_segment = ciphertext[i: i + self._segment_bytes]
-            xor_segment = self._aes.encrypt(self._shift_register)[:len(cipher_segment)]
-            plaintext_segment = [ (p ^ x) for (p, x) in zip(cipher_segment, xor_segment) ]
-
-            # Shift the top bits out and the ciphertext in
-            self._shift_register = _concat_list(self._shift_register[len(cipher_segment):], cipher_segment)
-
-            decrypted.extend(plaintext_segment)
-
-        return _bytes_to_string(decrypted)
-
-
-
-class AESModeOfOperationOFB(AESStreamModeOfOperation):
-    '''AES Output Feedback Mode of Operation.
-
-       o A stream-cipher, so input does not need to be padded to blocks,
-         allowing arbitrary length data.
-       o A bit twiddled in the cipher text, twiddles the same bit in the
-         same bit in the plain text, which can be useful for error
-         correction techniques.
-
-    Also see:
-       o https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Output_feedback_.28OFB.29
-       o See NIST SP800-38A (http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf); section 6.4'''
-
-
-    name = "Output Feedback (OFB)"
-
-    def __init__(self, key, iv = None):
-        if iv is None:
-            self._last_precipherblock = [ 0 ] * 16
-        elif len(iv) != 16:
-            raise ValueError('initialization vector must be 16 bytes')
-        else:
-          self._last_precipherblock = _string_to_bytes(iv)
-
-        self._remaining_block = [ ]
-
-        AESBlockModeOfOperation.__init__(self, key)
-
-    def encrypt(self, plaintext):
-        encrypted = [ ]
-        for p in _string_to_bytes(plaintext):
-            if len(self._remaining_block) == 0:
-                self._remaining_block = self._aes.encrypt(self._last_precipherblock)
-                self._last_precipherblock = [ ]
-            precipherbyte = self._remaining_block.pop(0)
-            self._last_precipherblock.append(precipherbyte)
-            cipherbyte = p ^ precipherbyte
-            encrypted.append(cipherbyte)
-
-        return _bytes_to_string(encrypted)
-
-    def decrypt(self, ciphertext):
-        # AES-OFB is symetric
-        return self.encrypt(ciphertext)
-
-
-
-class AESModeOfOperationCTR(AESStreamModeOfOperation):
-    '''AES Counter Mode of Operation.
-
-       o A stream-cipher, so input does not need to be padded to blocks,
-         allowing arbitrary length data.
-       o The counter must be the same size as the key size (ie. len(key))
-       o Each block independant of the other, so a corrupt byte will not
-         damage future blocks.
-       o Each block has a uniue counter value associated with it, which
-         contributes to the encrypted value, so no data patterns are
-         leaked.
-       o Also known as: Counter Mode (CM), Integer Counter Mode (ICM) and
-         Segmented Integer Counter (SIC
-
-   Security Notes:
-       o This method (and CBC) ARE recommended.
-       o Each message block is associated with a counter value which must be
-         unique for ALL messages with the same key. Otherwise security may be
-         compromised.
-
-    Also see:
-
-       o https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Counter_.28CTR.29
-       o See NIST SP800-38A (http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf); section 6.5
-         and Appendix B for managing the initial counter'''
-
-
-    name = "Counter (CTR)"
-
-    def __init__(self, key, counter = None):
-        AESBlockModeOfOperation.__init__(self, key)
-
-        if counter is None:
-            counter = Counter()
-
-        self._counter = counter
-        self._remaining_counter = [ ]
-
-    def encrypt(self, plaintext):
-        while len(self._remaining_counter) < len(plaintext):
-            self._remaining_counter += self._aes.encrypt(self._counter.value)
-            self._counter.increment()
-
-        plaintext = _string_to_bytes(plaintext)
-
-        encrypted = [ (p ^ c) for (p, c) in zip(plaintext, self._remaining_counter) ]
-        self._remaining_counter = self._remaining_counter[len(encrypted):]
-
-        return _bytes_to_string(encrypted)
-
-    def decrypt(self, crypttext):
-        # AES-CTR is symetric
-        return self.encrypt(crypttext)
-
-
 # Simple lookup table for each mode
 AESModesOfOperation = dict(
-    ctr = AESModeOfOperationCTR,
-    cbc = AESModeOfOperationCBC,
-    cfb = AESModeOfOperationCFB,
     ecb = AESModeOfOperationECB,
-    ofb = AESModeOfOperationOFB,
 )
