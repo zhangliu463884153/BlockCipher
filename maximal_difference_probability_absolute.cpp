@@ -1,6 +1,4 @@
-//
-//  main.cpp
-//  testsbox
+
 
 #include <stdio.h>
 #include <memory.h>
@@ -24,17 +22,27 @@ void DiffSpectrum(word32* s, word32 N,char *outputfile)
     start = clock();
 
     word32 x, d;
-    for (d = 1; d < N; d ++) {
-        memset(dt, 0, sizeof(word32)*N);
+    for (d = 1; d < N; d ++) 
+	{
+        //printf("d=%d\n",d);
+		memset(dt, 0, sizeof(word32)*N);
         for (x = 0; x < N; x ++) {
             dt[s[x]^s[x^d]] ++;
         }
-
+          
         for (x = 0; x < N; x ++) {
             ds[dt[x]] ++;
         }
+        
+//        FILE *f=fopen("dt.txt","a+");
+//		for (x = 0; x < N; x ++)
+//		{
+//			fprintf(f,"%d\n", dt[x]);
+//		} 
     }
-
+    
+  
+	
     end = clock();
     
     FILE *fp = fopen(outputfile, "a+");
@@ -84,26 +92,22 @@ void ReadSbox(char* sboxfile, word32* sbox)
 }
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    
-//
-//    word32 x;
-//    for (x = 0; x < N; x ++) {
-//        s[x] = x;
-//    }
-    printf("请输入Sbox文件名(需文件格式后缀名,例如：sbox.txt):\n");
+  
+
+    printf("请输入Sbox文件名:\n");
 	char inputfile[100];
 	gets(inputfile);
 
 	
-	printf("请输入结果输出文件名(需文件格式后缀名):\n");
+	printf("请输入差分分布表结果输出文件名:\n");
 	char outputfile[100];
 	gets(outputfile);
 
 	
     word32 num = GetN(inputfile);
     word32 N=ceil(log10(num)/log10(2));
-    printf("N= %d\n", N);
+    printf("S盒大小N= %d\n", N);
+    printf("num=%d\n",num);
     word32 s[num];
 	ReadSbox(inputfile, s);
     
