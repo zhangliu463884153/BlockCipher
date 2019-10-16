@@ -35,6 +35,8 @@ int differential_branch_number(word32* s,int N,int sbox_size)
 	int minize=N;//初始化最小值 
 	
 	for(int i=0;i<N;i++)
+	{
+		printf("num=%d\n",i);
 		for(int j=0;j<N;j++)
 		{
 			if(i!=j)
@@ -46,6 +48,8 @@ int differential_branch_number(word32* s,int N,int sbox_size)
 			}
 			
 		}
+	}
+		
 	printf("differential_branch_number=%d\n",minize);
 }
 
