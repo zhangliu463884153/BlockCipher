@@ -2772,3 +2772,72 @@ Solution count 4: 13 14 17 32
 
 Optimal solution found (tolerance 1.00e-04)
 Best objective 1.300000000000e+01, best bound 1.300000000000e+01, gap 0.0000%
+
+Gurobi 8.1.0 (win64, Python) logging started 10/18/19 10:59:50
+
+Warning: unknown variable '=' in binary section
+Read LP format model from file NBC.lp
+Reading time = 0.03 seconds
+: 4200 rows, 2721 columns, 12832 nonzeros
+Optimize a model with 4200 rows, 2721 columns and 12832 nonzeros
+Variable types: 0 continuous, 2721 integer (2721 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 1024 rows and 1025 columns
+Presolve time: 0.03s
+Presolved: 3176 rows, 1696 columns, 10784 nonzeros
+Variable types: 0 continuous, 1696 integer (1696 binary)
+Found heuristic solution: objective 32.0000000
+Found heuristic solution: objective 17.0000000
+
+Root relaxation: objective 5.000000e-01, 1839 iterations, 0.09 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    0.50000    0 1253   17.00000    0.50000  97.1%     -    0s
+H    0     0                      14.0000000    0.50000  96.4%     -    0s
+     0     0    2.37500    0 1205   14.00000    2.37500  83.0%     -    0s
+H    0     0                      13.0000000    2.37500  81.7%     -    0s
+     0     0    2.39594    0 1166   13.00000    2.39594  81.6%     -    0s
+     0     0    2.39594    0 1181   13.00000    2.39594  81.6%     -    0s
+     0     0    3.38871    0 1109   13.00000    3.38871  73.9%     -    0s
+     0     0    3.38871    0 1132   13.00000    3.38871  73.9%     -    0s
+     0     0    5.26737    0  795   13.00000    5.26737  59.5%     -    1s
+     0     0    5.26737    0  798   13.00000    5.26737  59.5%     -    1s
+     0     0    5.26739    0  901   13.00000    5.26739  59.5%     -    1s
+     0     0    5.27124    0  949   13.00000    5.27124  59.5%     -    1s
+     0     0    5.27124    0  949   13.00000    5.27124  59.5%     -    1s
+     0     0    6.22091    0  954   13.00000    6.22091  52.1%     -    1s
+     0     0    6.22091    0  788   13.00000    6.22091  52.1%     -    1s
+     0     0    6.23204    0  785   13.00000    6.23204  52.1%     -    1s
+     0     0    6.23204    0  778   13.00000    6.23204  52.1%     -    1s
+     0     0    6.23529    0  771   13.00000    6.23529  52.0%     -    1s
+     0     0    6.23529    0  703   13.00000    6.23529  52.0%     -    1s
+     0     0    6.23529    0  609   13.00000    6.23529  52.0%     -    1s
+     0     0    6.23529    0  614   13.00000    6.23529  52.0%     -    1s
+     0     0    6.23529    0  695   13.00000    6.23529  52.0%     -    1s
+     0     0    6.23529    0  695   13.00000    6.23529  52.0%     -    2s
+     0     2    6.23529    0  695   13.00000    6.23529  52.0%     -    2s
+   389   129    8.13505    7  879   13.00000    6.24503  52.0%   185    5s
+  1413   263    8.15472    9  726   13.00000    7.13051  45.1%   148   10s
+  2862   182    9.10946   12  468   13.00000    8.52715  34.4%   136   15s
+
+Cutting planes:
+  Cover: 245
+  Implied bound: 1
+  MIR: 27
+  Inf proof: 96
+  Zero half: 19
+  Mod-K: 3
+
+Explored 3660 nodes (511005 simplex iterations) in 17.65 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 4: 13 14 17 32 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.300000000000e+01, best bound 1.300000000000e+01, gap 0.0000%

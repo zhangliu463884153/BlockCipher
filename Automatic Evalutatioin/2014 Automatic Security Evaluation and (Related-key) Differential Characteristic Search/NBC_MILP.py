@@ -67,7 +67,7 @@ def F_Subjection (r,inV , outV , rightV , middV ):
 
     eqn = eqn + xorAdditionSubjection (outV , rightV , middV )
     
-    if r < ROUND_TO_COUNT:
+    if r < ROUND_TO_COUNT+1:
         count=0
         L=L_At_Round (r+1)
         for i in range(0,16):
@@ -98,9 +98,6 @@ def F_Subjection (r,inV , outV , rightV , middV ):
             count=count+1
     
     return eqn
-def Permutation(rightV):
-    pass
-
 
 
 def F_Out_At_Round (r):
