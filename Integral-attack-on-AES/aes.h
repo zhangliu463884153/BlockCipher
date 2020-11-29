@@ -2,6 +2,10 @@
 	Function prototypes
 */
 
+
+#include<stdio.h>
+#include <inttypes.h>
+#include <string.h>
 void printState(unsigned char * state);
 
 void AES_enc(unsigned char * plaintext, unsigned char * roundkey, unsigned char * state, unsigned char * S, int rounds);
