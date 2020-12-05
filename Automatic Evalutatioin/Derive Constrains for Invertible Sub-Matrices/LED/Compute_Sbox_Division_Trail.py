@@ -112,6 +112,7 @@ class Sbox:
 		#fileobj.write("Division Trails of sbox:\n")
 		for l in INDP:
 			fileobj.write(str(l) + "\n")
+			print(str(l))
 		fileobj.write("\n")
 		fileobj.close()
 
